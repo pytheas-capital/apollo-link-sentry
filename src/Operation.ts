@@ -1,7 +1,7 @@
-import { Operation as ApolloOperation } from 'apollo-link';
-import dotProp from 'dot-prop';
+import { Operation as ApolloOperation } from "apollo-link";
+import objectPath from "object-path";
 
-import { isEmpty } from './utils';
+import { isEmpty } from "./utils";
 
 export class Operation {
   /** The operation received from Apollo Link */
@@ -9,7 +9,7 @@ export class Operation {
 
   /** ApolloLinkSentry Operation data */
   public name: string;
-  public type: 'query' | 'mutation' | 'subscription' | undefined;
+  public type: "query" | "mutation" | "subscription" | undefined;
   public cache: object | undefined;
   public variables: object | undefined;
   public query: string | undefined;
@@ -39,11 +39,11 @@ export class Operation {
    * Get the operation type
    * @returns {"query" | "mutation" | "subscription" | undefined}
    */
-  private getType(): 'query' | 'mutation' | 'subscription' | undefined {
+  private getType(): "query" | "mutation" | "subscription" | undefined {
     const { query } = this.operation;
     const definition = query.definitions[0];
 
-    return definition.kind === 'OperationDefinition'
+    return definition.kind === "OperationDefinition"
       ? definition.operation
       : undefined;
   }
@@ -56,9 +56,7 @@ export class Operation {
     const context = this.operation.getContext();
     const cache = context.cache?.data?.data;
 
-    return !isEmpty(cache)
-      ? cache
-      : undefined;
+    return !isEmpty(cache) ? cache : undefined;
   }
 
   /**
@@ -68,35 +66,34 @@ export class Operation {
   private getVariables(): object | undefined {
     const { variables } = this.operation;
 
-    return !isEmpty(variables)
-      ? variables
-      : undefined;
+    return !isEmpty(variables) ? variables : undefined;
   }
 
   /**
    * Get the operation's query
    * @returns {string | undefined}
    */
-  private getQuery = (): string | undefined => (
+  private getQuery = (): string | undefined =>
     this.operation.query.loc?.source
       ? this.operation.query?.loc.source.body
-      : undefined
-  );
+      : undefined;
 
   /**
    * Get a set of keys from the context using dot notation
    * @param {string[]} keys
    * @returns {{[p: string]: any} | undefined}
    */
-  public getContextKeys = (keys: string[]): { [s: string]: any } | undefined => {
+  public getContextKeys = (
+    keys: string[]
+  ): { [s: string]: any } | undefined => {
     const context = this.operation.getContext();
 
     const find = keys
-      .map((key): object | undefined => ({ [key]: dotProp.get(context, key) }))
+      .map((key): object | undefined => ({
+        [key]: objectPath.get(context, key),
+      }))
       .reduce((a: object, b: any): object => ({ ...a, ...b }), {});
 
-    return !isEmpty(find)
-      ? find
-      : undefined;
+    return !isEmpty(find) ? find : undefined;
   };
 }
